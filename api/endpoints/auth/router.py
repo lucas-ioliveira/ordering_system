@@ -1,0 +1,109 @@
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
+
+from api.endpoints.auth.services import AuthService
+from api.endpoints.auth.schemas import CreateUserSchemas, LoginUserSchemas, ResponseUserSchema
+from api.endpoints.auth.providers import get_auth_service
+from api.config.security import oauth2_scheme
+
+router = APIRouter(prefix='/api/v1/auth', tags=['auth'])
+
+@router.post('/create-account', status_code=201, response_model=ResponseUserSchema[ResponseUserSchema])
+async def create_account(create_user_schema: CreateUserSchemas,
+                        service: AuthService = Depends(get_auth_service)):
+    """
+    Cria um novo usuário no banco de dados.
+
+    Recebe os dados do usuário e verifica se o e-mail do usuário a ser criado já existe no banco de dados.
+    Se existir, lança um erro HTTP 400 com a mensagem "E-mail já cadastrado!".
+    Caso contrário, hash a senha do usuário e cria o novo usuário no banco de dados.
+
+    Se o usuário for criado com sucesso, retorna o usuário criado com o status HTTP 201.
+    Se o usuário n o for criado, retorna um erro HTTP 400 com a mensagem 'Erro ao criar o usuário.'.
+    """
+    create_account = service.create_user(create_user_schema)
+    if not create_account:
+        raise HTTPException(status_code=400, detail='Erro ao criar o usuário.')
+    if create_account == 'E-mail já cadastrado!':
+        raise HTTPException(status_code=400, detail=create_account)
+    return ResponseUserSchema(message='Usuário criado com sucesso.', data=create_account)
+
+@router.get('/refresh-token')
+async def refresh_token(refresh_token: str = Depends(oauth2_scheme), 
+                        service: AuthService = Depends(get_auth_service)):
+    """
+    Renova o token de acesso com o token de refresh informado.
+
+    Utiliza o token de refresh informado para renovar o token de acesso.
+    Retorna os tokens de acesso e atualiza o.
+
+    Args:
+    ----------
+    refresh_token (str): O token de refresh a ser utilizado para renovar o token de acesso.
+
+    Returns:
+    ----------
+    dict: Um dicion rio com os tokens de acesso e atualiza o.
+    """
+    refresh_token_service = service.verify_token(refresh_token)
+    if refresh_token_service == 'Não autorizado, token inválido!':
+        raise HTTPException(status_code=400, detail='Não autorizado, token inválido!')
+    if refresh_token_service == 'Usuário nao encontrado!':
+        raise HTTPException(status_code=400, detail='Usuário nao encontrado!')
+    return refresh_token_service
+
+@router.post('/login')
+async def login(login_user_schema: LoginUserSchemas, 
+                service: AuthService = Depends(get_auth_service)):
+    
+    """
+    Realiza o login do usuário e retorna os tokens de acesso.
+
+    Verifica se o usuário existe e se as credenciais são válidas.
+    Se o usuário não existir ou as credenciais forem inválidas,
+    lança um erro HTTP 400 com a mensagem "Usuário não encontrado ou credenciais incorretas!".
+    Caso contrário, cria os tokens de acesso e atualiza o e os retorna.
+
+    Args:
+    ----------
+    login_user_schema (LoginUserSchemas): Os dados do usuário a ser logado.
+
+    Returns:
+    ----------
+    dict: Um dicionário com os tokens de acesso e atualiza o.
+
+    Raises:
+    ----------
+    HTTPException: Se o usuário não existir ou as credenciais forem inválidas.
+    """
+    login = service.login(login_user_schema)
+    if login == 'Usuário não encontrado ou credenciais incorretas!':
+        raise HTTPException(status_code=400, detail='Usuário não encontrado ou credenciais incorretas!')
+    return login
+
+@router.post('/login-form')
+async def login_form(login_user_form: OAuth2PasswordRequestForm = Depends(), 
+                service: AuthService = Depends(get_auth_service)):
+    """
+    Realiza o login do usuário para uso da documentação do FastAPI e retorna os tokens de acesso.
+
+    Verifica se o usuário existe e se as credenciais são válidas.
+    Se o usuário não existir ou as credenciais forem inválidas,
+    lança um erro HTTP 400 com a mensagem "Usuário não encontrado ou credenciais incorretas!".
+    Caso contrário, cria os tokens de acesso e atualiza o e os retorna.
+
+    Args:
+    ----------
+    login_user_form (OAuth2PasswordRequestForm): Os dados do usuário a ser logado.
+
+    Returns:
+    ----------
+    dict: Um dicionário com os tokens de acesso e atualiza o.
+
+    Raises:
+    ----------
+    HTTPException: Se o usuário não existir ou as credenciais forem inválidas.
+    """
+    return service.login_form(login_user_form)
+
+
