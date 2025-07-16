@@ -2,10 +2,13 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
 from api.endpoints.auth.services import AuthService
-from api.endpoints.auth.schemas import (CreateUserSchemas, LoginUserSchemas, 
+from api.endpoints.auth.schemas import (CreateUserSchemas, CreateUserAdminSchemas, LoginUserSchemas, 
                                         ResponseUserSchema, ResponseUser)
-from api.endpoints.auth.providers import get_auth_service
 from api.config.security import oauth2_scheme
+from api.endpoints.auth.providers import get_auth_service
+from api.endpoints.auth.providers import get_current_user
+from api.models.users import User
+
 
 router = APIRouter(prefix='/api/v1/auth', tags=['auth'])
 
@@ -22,10 +25,30 @@ async def create_account(
     Caso contrário, hash a senha do usuário e cria o novo usuário no banco de dados.
 
     Se o usuário for criado com sucesso, retorna o usuário criado com o status HTTP 201.
-    Se o usuário n o for criado, retorna um erro HTTP 400 com a mensagem 'Erro ao criar o usuário.'.
+    Se o usuário não for criado, retorna um erro HTTP 400 com a mensagem 'Erro ao criar o usuário.'.
     """
 
     user = service.create_user(create_user_schema)
+    return ResponseUserSchema(message='Usuário criado com sucesso.', data=ResponseUser.from_orm(user))
+
+@router.post('/create-account-admin', status_code=201, response_model=ResponseUserSchema[ResponseUser])
+async def create_account_admin(
+    create_user_admin_schema: CreateUserAdminSchemas,
+    service: AuthService = Depends(get_auth_service),
+    user: User = Depends(get_current_user)
+):
+    """
+    Cria um novo usuário com admin no banco de dados.
+
+    Recebe os dados do usuário e verifica se o e-mail do usuário a ser criado já existe no banco de dados.
+    Se existir, lança um erro HTTP 400 com a mensagem "E-mail já cadastrado!".
+    Caso contrário, hash a senha do usuário e cria o novo usuário no banco de dados.
+
+    Se o usuário for criado com sucesso, retorna o usuário criado com o status HTTP 201.
+    Se o usuário não for criado, retorna um erro HTTP 400 com a mensagem 'Erro ao criar o usuário.'.
+    """
+
+    user = service.create_user_admin(create_user_admin_schema, user)
     return ResponseUserSchema(message='Usuário criado com sucesso.', data=ResponseUser.from_orm(user))
 
 @router.get('/refresh-token')

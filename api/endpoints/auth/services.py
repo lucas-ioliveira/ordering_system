@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from jose import JWTError, jwt
 
 from api.endpoints.auth.repository import AuthRepository
-from api.endpoints.auth.schemas import CreateUserSchemas, LoginUserSchemas
+from api.endpoints.auth.schemas import CreateUserSchemas, CreateUserAdminSchemas, LoginUserSchemas
 from api.models.users import User
 from api.config.emuns import UserErrorMessages
 
@@ -68,11 +68,32 @@ class AuthService:
             name=data.name,
             email=data.email,
             password=encrypted,
-            active=data.active,
-            admin=data.admin,
+            active=data.active
         )
 
         created = self.repository.create_user(user)
+        if not created:
+            raise HTTPException(status_code=400, detail=UserErrorMessages.USER_NOT_CREATED)
+
+        return created
+    
+    def create_user_admin(self, data: CreateUserAdminSchemas, user: User) -> User:
+        if not user.admin:
+            raise HTTPException(status_code=400, detail=UserErrorMessages.USER_NOT_AUTHORIZED)
+        
+        user_exists = self.repository.get_user_by_email(data.email)
+        if user_exists:
+            raise HTTPException(status_code=400, detail=UserErrorMessages.EMAIL_ALREADY_REGISTERED)
+        
+        encrypted = self.encrypt_password(data.password)
+        user_admin = User(
+            name=data.name,
+            email=data.email,
+            password=encrypted,
+            active=data.active
+        )
+
+        created = self.repository.create_user(user_admin)
         if not created:
             raise HTTPException(status_code=400, detail=UserErrorMessages.USER_NOT_CREATED)
 

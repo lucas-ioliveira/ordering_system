@@ -23,8 +23,18 @@ class CreateUserSchemas(BaseModel):
     name: str
     email: str
     password: str
-    active: Optional[bool]
-    admin: Optional[bool]
+    active: bool
+    # admin: Optional[bool]
+
+    class Config:
+        from_attibutes = True
+
+class CreateUserAdminSchemas(BaseModel):
+    name: str
+    email: str
+    password: str
+    active: bool
+    admin: bool
 
     class Config:
         from_attibutes = True
