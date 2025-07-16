@@ -19,3 +19,4 @@ class OrderErrorMessages(str, Enum):
     ORDER_NOT_UPDATED = 'Erro ao atualizar pedido!'
     ORDER_NOT_DELETED = 'Erro ao deletar pedido!'
     ORDER_NOT_CANCELLED = 'Erro ao cancelar pedido!'
+    ORDER_ALREADY_CANCELLED = 'Pedido já cancelado!'
