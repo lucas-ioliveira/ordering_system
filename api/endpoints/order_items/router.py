@@ -64,3 +64,18 @@ async def get_order_items(id_order_items : int, service: OrderItemsService = Dep
     """
     order = service.get_order_items(id_order_items, user)
     return ResponseOrderItemsSchema(message='Order found', data=order)
+
+@router.post('/{id_order_items}/delete', status_code=status.HTTP_204_NO_CONTENT)
+async def delete_order_items(id_order_items : int, service: OrderItemsService = Depends(get_order_items_service),
+                       user: User = Depends(get_current_user)):
+    """
+    Deleta (inativa) um item de pedido no banco de dados.
+
+    Recebe o ID do item de pedido e verifica se o item de pedido existe e se o usuário tem permiss o para deletá-lo.
+
+    Se o item de pedido existir e o usuário tiver permiss o, deleta o item do pedido e retorna um status HTTP 204.
+    Se o item de pedido n o existir, retorna um erro HTTP 404 com a mensagem 'Order not found'.
+    Se o usuário n o tiver permiss o, retorna um erro HTTP 401 com a mensagem 'Unauthorized'.
+    """
+    service.delete_order_items(id_order_items, user)
+    return ResponseOrderItemsSchema(message='Order item deleted', data=None)

@@ -108,5 +108,41 @@ class OrderItemsService:
         session.refresh(order)
         return order_item_created
 
+    def delete_order_items(self, id_order_items: int, user: User):
+        """
+        Deleta um item de pedido no banco de dados.
 
+        Parâmetros
+        ----------
+        id_order_items : int
+            O ID do item de pedido a ser deletado.
 
+        Retornos
+        -------
+        Order | HTTPException
+            O pedido atualizado se encontrado e cancelado, ou None se não encontrado.
+            Um erro HTTP 404 com a mensagem 'Order not found' se o item de pedido não existir.
+            Um erro HTTP 401 com a mensagem 'Unauthorized' se o usuário não tiver permissão.
+        """
+        session = next(get_session())
+        order_repo = OrderRepository(session)
+
+        order_items = self.repository.get_order_items_by_id(id_order_items)
+        if not order_items:
+            raise HTTPException(status_code=404, detail=OrderErrorMessages.ORDER_NOT_FOUND)
+        
+        order = order_repo.get_order_by_id(order_items.order)
+        if not order:
+            raise HTTPException(status_code=404, detail=OrderErrorMessages.ORDER_NOT_FOUND)
+        
+        if order.status == 'CANCELADO':
+            raise HTTPException(status_code=400, detail=OrderErrorMessages.ORDER_ALREADY_CANCELLED)
+
+        if order.user != user.id and not user.admin:
+            raise HTTPException(status_code=401, detail=UserErrorMessages.USER_NOT_AUTHORIZED)
+
+        order_item_created = self.repository.delete_order_items(id_order_items)
+        order.update_order_price()
+        session.commit()
+        session.refresh(order)
+        return order_item_created

@@ -12,10 +12,11 @@ class OrderItem(Base):
     order = Column('order', ForeignKey('pedidos.id'))
     active = Column('active', Boolean)
 
-    def __init__(self, amount, flavor, size, unit_price, order):
+    def __init__(self, amount, flavor, size, unit_price, order, active=True):
         self.amount = amount
         self.flavor = flavor
         self.size = size
         self.unit_price =unit_price
         self.order = order
+        self.active = active
     

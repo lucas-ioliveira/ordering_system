@@ -27,6 +27,7 @@ class OrderItemsPublicSchema(BaseModel):
     size: str
     unit_price: float
     order: int
+    active: bool
 
     class Config:
         from_attributes = True

@@ -68,3 +68,15 @@ class OrderItemsRepository:
             return order_item
         except SQLAlchemyError:
             return None
+
+    def delete_order_items(self, id_order_items: int):
+        try:
+            order_item = self.get_order_items_by_id(id_order_items)
+            if order_item:
+                order_item.active = False
+                self.session.commit()
+                return order_item
+            else:
+                return None
+        except SQLAlchemyError:
+            return None
