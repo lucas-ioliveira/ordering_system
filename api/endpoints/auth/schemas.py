@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from pydantic.generics import GenericModel
 from typing import Optional, Generic, TypeVar
 
@@ -9,6 +9,16 @@ class ResponseUserSchema(GenericModel, Generic[T]):
     message: str
     data: Optional[T] = None
 
+class ResponseUser(BaseModel):
+    id: int
+    name: str
+    email: EmailStr
+    active: bool
+    admin: bool
+
+    class Config:
+        from_attributes = True
+
 class CreateUserSchemas(BaseModel):
     name: str
     email: str
@@ -17,7 +27,6 @@ class CreateUserSchemas(BaseModel):
     admin: Optional[bool]
 
     class Config:
-        # Tranformar os campos em atributos da classe
         from_attibutes = True
 
 class LoginUserSchemas(BaseModel):

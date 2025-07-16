@@ -9,6 +9,7 @@ from jose import JWTError, jwt
 from api.endpoints.auth.repository import AuthRepository
 from api.endpoints.auth.schemas import CreateUserSchemas, LoginUserSchemas
 from api.models.users import User
+from api.config.emuns import UserErrorMessages
 
 load_dotenv()
 
@@ -41,7 +42,7 @@ class AuthService:
         """
         return self.bcrypt_context.hash(password)
     
-    def create_user(self, data: CreateUserSchemas):
+    def create_user(self, data: CreateUserSchemas) -> User:
         """
         Cria um novo usuário no banco de dados.
 
@@ -56,14 +57,13 @@ class AuthService:
             User: O usu rio criado.
 
         Raises:
-            HTTPException: Se o e-mail do usu rio j  existir no banco de dados.
+            HTTPException: Se o e-mail do usuário já existir no banco de dados.
         """
         user_exists = self.repository.get_user_by_email(data.email)
         if user_exists:
-            return 'E-mail já cadastrado!'
+            raise HTTPException(status_code=400, detail=UserErrorMessages.EMAIL_ALREADY_REGISTERED)
 
         encrypted = self.encrypt_password(data.password)
-
         user = User(
             name=data.name,
             email=data.email,
@@ -72,7 +72,11 @@ class AuthService:
             admin=data.admin,
         )
 
-        return self.repository.create_user(user)
+        created = self.repository.create_user(user)
+        if not created:
+            raise HTTPException(status_code=400, detail=UserErrorMessages.USER_NOT_CREATED)
+
+        return created
 
     def create_token(self, user_id: int, token_duration: timedelta = None) -> str:
         """
@@ -93,7 +97,7 @@ class AuthService:
         """
         user = self.repository.get_user_by_id(user_id)
         if not user:
-            return 'Usuário não encontrado!'
+            return UserErrorMessages.USER_NOT_FOUND
 
         expire_delta = token_duration or timedelta(minutes=self.access_token_expire)
 
@@ -125,11 +129,11 @@ class AuthService:
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
         except JWTError:
-            return 'Não autorizado, token inválido!'
+            raise HTTPException(status_code=401, detail=UserErrorMessages.USER_INVALID_TOKEN)
         
         user = self.repository.get_user_by_id(int(payload['sub']))
         if not user:
-            return 'Usuário nao encontrado!'
+            raise HTTPException(status_code=401, detail=UserErrorMessages.USER_NOT_FOUND)
         
         return user
 
@@ -176,15 +180,10 @@ class AuthService:
         """
         user = self.authenticate_user(data.email, data.password)
         if not user:
-            return 'Usuário não encontrado ou credenciais incorretas!'
+            return UserErrorMessages.USER_NOT_FOUND_OR_CREDENTIALS_INVALID
 
         access_token = self.create_token(user.id)
-        if access_token == 'Usuário não encontrado!':
-            return 'Usuário não encontrado ou credenciais incorretas!'
-        
         refresh_token = self.create_token(user.id, token_duration=timedelta(days=7))
-        if refresh_token == 'Usuário não encontrado!':
-            return 'Usuário não encontrado ou credenciais incorretas!'
 
         data = {
                 "access_token": access_token,
@@ -214,10 +213,11 @@ class AuthService:
         """
         user = self.authenticate_user(data.username, data.password)
         if not user:
-            raise HTTPException(status_code=400, detail="Usuário não encontrado ou credenciais incorretas!")
+            return UserErrorMessages.USER_NOT_FOUND_OR_CREDENTIALS_INVALID
 
         access_token = self.create_token(user.id)
         refresh_token = self.create_token(user.id, token_duration=timedelta(days=7))
+
         data = {
                 "access_token": access_token,
                 "refresh_token": refresh_token,
@@ -241,6 +241,7 @@ class AuthService:
         user = self.verify_token(refresh_token)
         access_token = self.create_token(user.id)
         refresh_token = self.create_token(user.id, token_duration=timedelta(days=7))
+
         data = {
                 "access_token": access_token,
                 "refresh_token": refresh_token,

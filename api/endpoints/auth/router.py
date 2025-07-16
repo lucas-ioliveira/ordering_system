@@ -1,16 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
 from api.endpoints.auth.services import AuthService
-from api.endpoints.auth.schemas import CreateUserSchemas, LoginUserSchemas, ResponseUserSchema
+from api.endpoints.auth.schemas import (CreateUserSchemas, LoginUserSchemas, 
+                                        ResponseUserSchema, ResponseUser)
 from api.endpoints.auth.providers import get_auth_service
 from api.config.security import oauth2_scheme
 
 router = APIRouter(prefix='/api/v1/auth', tags=['auth'])
 
-@router.post('/create-account', status_code=201, response_model=ResponseUserSchema[ResponseUserSchema])
-async def create_account(create_user_schema: CreateUserSchemas,
-                        service: AuthService = Depends(get_auth_service)):
+@router.post('/create-account', status_code=201, response_model=ResponseUserSchema[ResponseUser])
+async def create_account(
+    create_user_schema: CreateUserSchemas,
+    service: AuthService = Depends(get_auth_service)
+):
     """
     Cria um novo usuário no banco de dados.
 
@@ -21,12 +24,9 @@ async def create_account(create_user_schema: CreateUserSchemas,
     Se o usuário for criado com sucesso, retorna o usuário criado com o status HTTP 201.
     Se o usuário n o for criado, retorna um erro HTTP 400 com a mensagem 'Erro ao criar o usuário.'.
     """
-    create_account = service.create_user(create_user_schema)
-    if not create_account:
-        raise HTTPException(status_code=400, detail='Erro ao criar o usuário.')
-    if create_account == 'E-mail já cadastrado!':
-        raise HTTPException(status_code=400, detail=create_account)
-    return ResponseUserSchema(message='Usuário criado com sucesso.', data=create_account)
+
+    user = service.create_user(create_user_schema)
+    return ResponseUserSchema(message='Usuário criado com sucesso.', data=ResponseUser.from_orm(user))
 
 @router.get('/refresh-token')
 async def refresh_token(refresh_token: str = Depends(oauth2_scheme), 
@@ -45,11 +45,7 @@ async def refresh_token(refresh_token: str = Depends(oauth2_scheme),
     ----------
     dict: Um dicion rio com os tokens de acesso e atualiza o.
     """
-    refresh_token_service = service.verify_token(refresh_token)
-    if refresh_token_service == 'Não autorizado, token inválido!':
-        raise HTTPException(status_code=400, detail='Não autorizado, token inválido!')
-    if refresh_token_service == 'Usuário nao encontrado!':
-        raise HTTPException(status_code=400, detail='Usuário nao encontrado!')
+    refresh_token_service = service.refresh_token(refresh_token)
     return refresh_token_service
 
 @router.post('/login')
@@ -77,8 +73,6 @@ async def login(login_user_schema: LoginUserSchemas,
     HTTPException: Se o usuário não existir ou as credenciais forem inválidas.
     """
     login = service.login(login_user_schema)
-    if login == 'Usuário não encontrado ou credenciais incorretas!':
-        raise HTTPException(status_code=400, detail='Usuário não encontrado ou credenciais incorretas!')
     return login
 
 @router.post('/login-form')
