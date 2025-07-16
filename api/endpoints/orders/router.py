@@ -11,7 +11,8 @@ from api.models.users import User
 router = APIRouter(
     prefix='/api/v1/orders', 
     tags=['orders'],
-    dependencies=[Depends(get_current_user)])
+    dependencies=[Depends(get_current_user)]
+)
 
 @router.get('/', status_code=status.HTTP_200_OK, response_model=ResponseOrderSchema[List[OrderPublicSchema]])
 async def get_all_orders(offset: int = 0, limit: int = 10, service: OrderService = Depends(get_order_service)):
