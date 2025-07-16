@@ -18,20 +18,25 @@ class OrderService:
         """
         self.repository = repository
 
-    def get_all_orders(self, offset: int = 0, limit: int = 10):
+    def get_all_orders(self, user: User, offset: int = 0, limit: int = 10):
         """
         Recupera todos os pedidos do banco de dados com paginação.
 
         Parâmetros
         ----------
+        user : User
+            O usuário autenticado atual.
         offset : int, opcional O número de pedidos a serem pulados antes de iniciar a coleta do conjunto de resultados. Padrão é 0.
         limit : int, opcional O número máximo de pedidos a serem retornados. Padrão é 10.
 
         Retornos
         -------
-        list[Order] A lista de pedidos se encontrado, caso contr rio uma lista vazia.
+        list[Order] A lista de pedidos se encontrado, caso contrário uma lista vazia.
         """
-        return self.repository.get_all_orders(offset, limit)
+        if user.admin:
+            return self.repository.get_all_orders(offset, limit)
+
+        return self.repository.get_orders_by_user(user.id, offset, limit)
 
     def get_order(self, id_order: int, user: User):
         """
@@ -59,7 +64,7 @@ class OrderService:
             Um erro HTTP 401 com a mensagem 'Unauthorized' se o usuário não tiver permissão.
         
         """
-        order = self.repository.get_order_by_id(id_order)
+        order = self.repository.get_order_by_id(id_order, user.id)
         if not order:
             raise HTTPException(status_code=404, detail=OrderErrorMessages.ORDER_NOT_FOUND)
         if order.user != user.id and not user.admin:

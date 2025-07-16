@@ -15,7 +15,9 @@ router = APIRouter(
 )
 
 @router.get('/', status_code=status.HTTP_200_OK, response_model=ResponseOrderSchema[List[OrderPublicSchema]])
-async def get_all_orders(offset: int = 0, limit: int = 10, service: OrderService = Depends(get_order_service)):
+async def get_all_orders(offset: int = 0, limit: int = 10, 
+                         service: OrderService = Depends(get_order_service),
+                         user: User = Depends(get_current_user)):
     """
     Recupera todos os pedidos do banco de dados com paginação.
 
@@ -30,7 +32,7 @@ async def get_all_orders(offset: int = 0, limit: int = 10, service: OrderService
     ResponseOrderSchema[List[OrderPublicSchema]] Um esquema de resposta contendo uma mensagem e a lista de pedidos.
     """
 
-    orders = service.get_all_orders(offset, limit)
+    orders = service.get_all_orders(user, offset, limit)
     return ResponseOrderSchema(message='Orders found', data=orders)
 
 @router.post('/', status_code=status.HTTP_201_CREATED, response_model=ResponseOrderSchema[OrderPublicSchema])

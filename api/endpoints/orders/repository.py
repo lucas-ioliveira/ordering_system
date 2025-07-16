@@ -30,8 +30,14 @@ class OrderRepository:
             return self.session.query(Order).filter(Order.active == True).offset(offset).limit(limit).all()
         except SQLAlchemyError:
             return []
+    
+    def get_orders_by_user(self, user_id: int, offset: int = 0, limit: int = 10):
+        try:
+            return self.session.query(Order).filter(Order.user == user_id, Order.active == True).offset(offset).limit(limit).all()
+        except SQLAlchemyError:
+            return []
 
-    def get_order_by_id(self, id) -> Optional[Order]:
+    def get_order_by_id(self, id_order: int, user_id: int) -> Optional[Order]:
         """
             Recupera um pedido pelo seu ID do banco de dados.
 
@@ -42,7 +48,7 @@ class OrderRepository:
             Optional[Order] O objeto do pedido se encontrado, caso contrário None.
         """
         try:
-            return self.session.query(Order).filter(Order.id == id, Order.active == True).first()
+            return self.session.query(Order).filter(Order.id == id_order, Order.active == True).first()
         except SQLAlchemyError:
             return None
 
