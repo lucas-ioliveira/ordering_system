@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from typing import List
 
 from api.endpoints.auth.providers import get_current_user
@@ -45,8 +45,6 @@ async def create_order(create_order_schema: CreateOrderSchema,
     Se o pedido n o for criado, retorna um erro HTTP 400 com a mensagem 'Erro ao criar o pedido.'.
     """
     order = service.create_order(create_order_schema)
-    if order is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Erro ao criar o pedido.')
     return ResponseOrderSchema(message='Pedido criado com sucesso.', data=order)
 
 @router.get('/{id_order}', status_code=status.HTTP_200_OK, response_model=ResponseOrderSchema[OrderPublicSchema])
@@ -63,10 +61,6 @@ async def get_order(id_order : int, service: OrderService = Depends(get_order_se
     Se o usuário n o tiver permiss o, retorna um erro HTTP 401 com a mensagem 'Unauthorized'.
     """
     order = service.get_order(id_order, user)
-    if not order:
-        raise HTTPException(status_code=404, detail='Order not found')
-    if order == 'unauthorized':
-        raise HTTPException(status_code=401, detail='Unauthorized')
     return ResponseOrderSchema(message='Order found', data=order)
 
 @router.post('/{id_order}/cancel', status_code=status.HTTP_200_OK, response_model=ResponseOrderSchema[OrderPublicSchema])
@@ -88,7 +82,7 @@ async def cancel_order(id_order : int, service: OrderService = Depends(get_order
 
     Returns
     -------
-        Um dicionário com uma mensagem de confirmação de cancelamento do pedido e o pedido atualizado.
+    dict[str, Any] Um dicionário com uma mensagem de confirmação de cancelamento do pedido e o pedido atualizado.
 
     Raises
     ------
@@ -96,8 +90,4 @@ async def cancel_order(id_order : int, service: OrderService = Depends(get_order
         Se o pedido não existir ou o usuário não tiver permissão para cancelá-lo.
     """
     order = service.cancel_order(id_order, user)
-    if not order:
-        raise HTTPException(status_code=404, detail='Order not found')
-    if order == 'unauthorized':
-        raise HTTPException(status_code=401, detail='Unauthorized')
     return ResponseOrderSchema(message='Order canceled', data=order)

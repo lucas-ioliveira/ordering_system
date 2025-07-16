@@ -1,7 +1,8 @@
-from passlib.context import CryptContext
+from fastapi import HTTPException
 
 from api.endpoints.orders.repository import OrderRepository
 from api.endpoints.orders.schemas import CreateOrderSchema
+from api.config.emuns import UserErrorMessages, OrderErrorMessages
 from api.models.users import User
 from api.models.orders import Order
 
@@ -38,9 +39,9 @@ class OrderService:
 
         Verifica se o pedido existe e se o usuário tem permiss o para acess -lo.
 
-        Se o pedido existir e o usuário tiver permiss o, retorna o pedido.
-        Se o pedido não existir, retorna None.
-        Se o usuário não tiver permiss o, retorna 'unauthorized'.
+        Se o pedido existir e o usuário tiver permissão, retorna o pedido.
+        Se o pedido não existir, retorna um erro HTTP 404 com a mensagem 'Order not found'.
+        Se o usuário não tiver permissão, retorna um erro HTTP 401 com a mensagem 'Unauthorized'.
 
         Parâmetros
         ----------
@@ -51,14 +52,18 @@ class OrderService:
 
         Retornos
         -------
-        Order | None | str
-            O pedido se encontrado e o usuário tiver permiss o, None se o pedido n o existir, ou 'unauthorized' se o usuário não tiver permissão.
+        Order
+            O pedido se encontrado e o usuário tiver permissão.
+        HTTPException
+            Um erro HTTP 404 com a mensagem 'Order not found' se o pedido não existir.
+            Um erro HTTP 401 com a mensagem 'Unauthorized' se o usuário não tiver permissão.
+        
         """
         order = self.repository.get_order_by_id(id_order)
         if not order:
-            return None
+            raise HTTPException(status_code=404, detail=OrderErrorMessages.ORDER_NOT_FOUND)
         if order.user != user.id and not user.admin:
-            return 'unauthorized'
+            raise HTTPException(status_code=401, detail=UserErrorMessages.USER_NOT_AUTHORIZED)
         return order
 
     def create_order(self, data: CreateOrderSchema):
@@ -76,7 +81,10 @@ class OrderService:
             O pedido criado com o ID atualizado.
         """
         order = Order(user=data.user)
-        return self.repository.create_order(order)
+        order_created = self.repository.create_order(order)
+        if not order_created:
+            raise HTTPException(status_code=500, detail=OrderErrorMessages.ORDER_NOT_CREATED)
+        return order_created
     
     def cancel_order(self, id_order: int, user: User):
         """
@@ -97,14 +105,21 @@ class OrderService:
 
         Retornos
         -------
-        Order | None | str
-            O pedido atualizado se encontrado e o usuário tiver permiss o, None se o pedido n o existir, ou 'unauthorized' se o usuário não tiver permiss o.
+        Order
+            O pedido atualizado se encontrado e o usuário tiver permissão.
+        HTTPException
+            Um erro HTTP 404 com a mensagem 'Order not found' se o pedido não existir.
+            Um erro HTTP 401 com a mensagem 'Unauthorized' se o usuário não tiver permissão. 
         """
         order = self.repository.get_order_by_id(id_order)
         if not order:
-            return None
+            raise HTTPException(status_code=404, detail=OrderErrorMessages.ORDER_NOT_FOUND)
+
         if order.user != user.id and not user.admin:
-            return 'unauthorized'
-        return self.repository.cancel_order(id_order)
-
-
+            raise HTTPException(status_code=401, detail=UserErrorMessages.USER_NOT_AUTHORIZED)
+        
+        order_created = self.repository.cancel_order(id_order)
+        if not order_created:
+            raise HTTPException(status_code=500, detail=OrderErrorMessages.ORDER_NOT_CANCELLED)
+        
+        return order_created
