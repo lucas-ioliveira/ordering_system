@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from sqlalchemy.orm import relationship
 from sqlalchemy_utils.types import ChoiceType
 from api.database.base import Base
 
@@ -15,9 +16,12 @@ class Order(Base):
     user = Column('user', ForeignKey('usuarios.id'))
     status = Column('status', String)
     price = Column('price', Float)
-    #items = 
+    items = relationship('OrderItem', cascade='all, delete')
     
     def __init__(self, user, status='PENDENTE', price=0):
         self.user = user
         self.status = status
         self.price = price
+
+    def update_order_price(self):
+        self.price = sum(item.unit_price * item.amount for item in self.items)
