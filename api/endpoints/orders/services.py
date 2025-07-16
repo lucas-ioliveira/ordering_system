@@ -123,3 +123,41 @@ class OrderService:
             raise HTTPException(status_code=500, detail=OrderErrorMessages.ORDER_NOT_CANCELLED)
         
         return order_created
+    
+    def finish_order(self, id_order: int, user: User):
+        """
+        Finaliza um pedido no banco de dados.
+
+        Verifica se o pedido existe e se o usuário tem permiss o para cancelá-lo.
+
+        Se o pedido existir e o usuário tiver permissão, altera o status do pedido para 'FINALIZADO' e retorna o pedido atualizado.
+        Se o pedido não existir, retorna None.
+        Se o usuário não tiver permiss o, retorna 'unauthorized'.
+
+        Parâmetros
+        ----------
+        id_order : int
+            O ID do pedido a ser finalizado.
+        user : User
+            O usuário que está fazendo a requisição.
+
+        Retornos
+        -------
+        Order
+            O pedido atualizado se encontrado e o usuário tiver permissão.
+        HTTPException
+            Um erro HTTP 404 com a mensagem 'Order not found' se o pedido não existir.
+            Um erro HTTP 401 com a mensagem 'Unauthorized' se o usuário não tiver permissão. 
+        """
+        order = self.repository.get_order_by_id(id_order)
+        if not order:
+            raise HTTPException(status_code=404, detail=OrderErrorMessages.ORDER_NOT_FOUND)
+
+        if not user.admin:
+            raise HTTPException(status_code=401, detail=UserErrorMessages.USER_NOT_AUTHORIZED)
+        
+        order_created = self.repository.finish_order(id_order)
+        if not order_created:
+            raise HTTPException(status_code=500, detail=OrderErrorMessages.ORDER_NOT_CANCELLED)
+        
+        return order_created

@@ -19,10 +19,11 @@ class Order(Base):
     active = Column('active', Boolean)
     items = relationship('OrderItem', cascade='all, delete')
     
-    def __init__(self, user, status='PENDENTE', price=0):
+    def __init__(self, user, status='PENDENTE', price=0, active=True):
         self.user = user
         self.status = status
         self.price = price
+        self.active = active
 
     def update_order_price(self):
-        self.price = sum(item.unit_price * item.amount for item in self.items)
+        self.price = sum(item.unit_price * item.amount for item in self.items if item.active)

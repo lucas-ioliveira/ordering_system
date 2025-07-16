@@ -21,6 +21,7 @@ class OrderPublicSchema(BaseModel):
     user: int
     status: str
     price: float
+    active: bool
 
     class Config:
         from_attributes = True

@@ -92,3 +92,32 @@ async def cancel_order(id_order : int, service: OrderService = Depends(get_order
     """
     order = service.cancel_order(id_order, user)
     return ResponseOrderSchema(message='Order canceled', data=order)
+
+@router.post('/{id_order}/finish', status_code=status.HTTP_200_OK, response_model=ResponseOrderSchema[OrderPublicSchema])
+async def finish_order(id_order : int, service: OrderService = Depends(get_order_service),
+                       user: User = Depends(get_current_user)):
+    """
+    Finaliza um pedido no banco de dados.
+
+    Recebe o ID do pedido a ser finalizado e verifica se o pedido existe e se o usuário tem permiss o para cancelá-lo.
+
+    Se o pedido existir e o usuário tiver permissão, altera o status do pedido para 'FINALIZADO' e retorna o pedido atualizado.
+
+    Caso contrário, lança um erro HTTP 404 com a mensagem 'Order not found' ou um erro HTTP 401 com a mensagem 'Unauthorized'.
+
+    Parameters
+    ----------
+    id_order : int
+        O ID do pedido a ser finalizado.
+
+    Returns
+    -------
+    dict[str, Any] Um dicionário com uma mensagem de confirmação de cancelamento do pedido e o pedido atualizado.
+
+    Raises
+    ------
+    HTTPException
+        Se o pedido não existir ou o usuário não tiver permissão para finalizá-lo.
+    """
+    order = service.finish_order(id_order, user)
+    return ResponseOrderSchema(message='Order finished', data=order)

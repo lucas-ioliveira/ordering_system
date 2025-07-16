@@ -95,3 +95,30 @@ class OrderRepository:
         except SQLAlchemyError:
             self.session.rollback()
             return None
+
+    def finish_order(self, id_order: int) -> Optional[Order]:
+        """
+        Finaliza um pedido no banco de dados.
+
+        Parameters
+        ----------
+        id_order : int
+            O ID do pedido a ser finalizado.
+
+        Returns
+        -------
+        Order | None
+            O pedido atualizado se encontrado e finalizado, ou None se não encontrado.
+        """
+        try:
+            order = self.get_order_by_id(id_order)
+            if not order:
+                return None
+
+            order.status = 'FINALIZADO'
+            self.session.commit()
+            self.session.refresh(order)
+            return order
+        except SQLAlchemyError:
+            self.session.rollback()
+            return None
