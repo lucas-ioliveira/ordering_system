@@ -27,11 +27,11 @@ class OrderItemsRepository:
             list[OrderItem] A lista de pedidos se encontrado, caso contrário uma lista vazia.
         """
         try:
-            return self.session.query(OrderItem).offset(offset).limit(limit).all()
+            return self.session.query(OrderItem).filter(OrderItem.active == True).offset(offset).limit(limit).all()
         except SQLAlchemyError:
             return []
 
-    def get_order_by_id(self, id) -> Optional[OrderItem]:
+    def get_order_items_by_id(self, id) -> Optional[OrderItem]:
         """
             Recupera um pedido pelo seu ID do banco de dados.
 
@@ -42,7 +42,7 @@ class OrderItemsRepository:
             Optional[OrderItem] O objeto do pedido se encontrado, caso contrário None.
         """
         try:
-            return self.session.query(OrderItem).filter(OrderItem.id == id).first()
+            return self.session.query(OrderItem).filter(OrderItem.id == id, OrderItem.active == True).first()
         except SQLAlchemyError:
             return None
 
@@ -67,31 +67,4 @@ class OrderItemsRepository:
             self.session.refresh(order_item)
             return order_item
         except SQLAlchemyError:
-            return None
-
-    def cancel_order(self, id_order: int) -> Optional[OrderItem]:
-        """
-        Cancela um pedido no banco de dados.
-
-        Parameters
-        ----------
-        id_order : int
-            O ID do pedido a ser cancelado.
-
-        Returns
-        -------
-        Order | None
-            O pedido atualizado se encontrado e cancelado, ou None se não encontrado.
-        """
-        try:
-            order = self.get_order_by_id(id_order)
-            if not order:
-                return None
-
-            order.status = 'CANCELADO'
-            self.session.commit()
-            self.session.refresh(order)
-            return order
-        except SQLAlchemyError:
-            self.session.rollback()
             return None

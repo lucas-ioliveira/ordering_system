@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Boolean
 from api.database.base import Base
 
 class OrderItem(Base):
@@ -10,6 +10,7 @@ class OrderItem(Base):
     size = Column('size', String)
     unit_price = Column('unit_price', Float)
     order = Column('order', ForeignKey('pedidos.id'))
+    active = Column('active', Boolean)
 
     def __init__(self, amount, flavor, size, unit_price, order):
         self.amount = amount

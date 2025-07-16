@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy_utils.types import ChoiceType
 from api.database.base import Base
@@ -16,6 +16,7 @@ class Order(Base):
     user = Column('user', ForeignKey('usuarios.id'))
     status = Column('status', String)
     price = Column('price', Float)
+    active = Column('active', Boolean)
     items = relationship('OrderItem', cascade='all, delete')
     
     def __init__(self, user, status='PENDENTE', price=0):

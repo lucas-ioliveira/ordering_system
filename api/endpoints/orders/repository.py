@@ -27,7 +27,7 @@ class OrderRepository:
             list[Order] A lista de pedidos se encontrado, caso contrário uma lista vazia.
         """
         try:
-            return self.session.query(Order).offset(offset).limit(limit).all()
+            return self.session.query(Order).filter(Order.active == True).offset(offset).limit(limit).all()
         except SQLAlchemyError:
             return []
 
@@ -42,7 +42,7 @@ class OrderRepository:
             Optional[Order] O objeto do pedido se encontrado, caso contrário None.
         """
         try:
-            return self.session.query(Order).filter(Order.id == id).first()
+            return self.session.query(Order).filter(Order.id == id, Order.active == True).first()
         except SQLAlchemyError:
             return None
 
