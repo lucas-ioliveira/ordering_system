@@ -1,6 +1,8 @@
 from pydantic import BaseModel
 from pydantic.generics import GenericModel
-from typing import Optional, Generic, TypeVar
+from typing import Optional, Generic, TypeVar, List
+
+from api.endpoints.order_items.schemas import OrderItemsPublicSchema
 
 # T é um tipo genérico que será substituído por outro schema (ex: OrderPublicSchema)
 T = TypeVar("T")
@@ -22,6 +24,7 @@ class OrderPublicSchema(BaseModel):
     status: str
     price: float
     active: bool
+    items: List[OrderItemsPublicSchema]
 
     class Config:
         from_attributes = True
