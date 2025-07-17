@@ -1,11 +1,10 @@
 from pydantic import BaseModel, EmailStr
-from pydantic.generics import GenericModel
 from typing import Optional, Generic, TypeVar
 
 T = TypeVar("T")
 
 
-class ResponseUserSchema(GenericModel, Generic[T]):
+class ResponseUserSchema(BaseModel, Generic[T]):
     message: str
     data: Optional[T] = None
 
@@ -24,7 +23,6 @@ class CreateUserSchemas(BaseModel):
     email: str
     password: str
     active: bool
-    # admin: Optional[bool]
 
     class Config:
         from_attibutes = True

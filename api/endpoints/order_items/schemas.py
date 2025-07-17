@@ -1,11 +1,10 @@
 from pydantic import BaseModel
-from pydantic.generics import GenericModel
 from typing import Optional, Generic, TypeVar
 
 # T é um tipo genérico que será substituído por outro schema (ex: OrderPublicSchema)
 T = TypeVar("T")
 
-class ResponseOrderItemsSchema(GenericModel, Generic[T]):
+class ResponseOrderItemsSchema(BaseModel, Generic[T]):
     message: str
     data: Optional[T] = None # Pode ser um objeto, uma lista, ou None
 
