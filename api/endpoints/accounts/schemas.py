@@ -19,3 +19,7 @@ class ResponseAccountsPublicSchema(BaseModel):
 
 class ResponseAccountsAdminSchema(ResponseAccountsPublicSchema):
     admin: bool
+
+class UpdateAccountsSchema(BaseModel):
+    name: Optional[str]
+    email: Optional[EmailStr]

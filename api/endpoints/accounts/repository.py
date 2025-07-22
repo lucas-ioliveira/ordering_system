@@ -80,3 +80,31 @@ class AccountRepository:
             return self.session.query(User).filter(User.id == account_id, User.active == True).first()
         except SQLAlchemyError:
             return None
+    
+    def update_account(self, account, data):
+        """
+        Atualiza os dados de uma conta existente no banco de dados.
+
+        Essa função atualiza os campos `name` e `email` de uma conta, se esses forem fornecidos.
+        Caso ocorra um erro durante a transação com o banco, a operação é revertida e `None` é retornado.
+
+        Args:
+            account (Account): Instância do modelo de conta a ser atualizada.
+            data (UpdateAccountsSchema): Dados de entrada contendo os campos opcionais `name` e `email`.
+
+        Returns:
+            Account | None: A conta atualizada com os novos dados ou `None` caso ocorra uma falha no banco.
+        """
+        try:
+            if data.name is not None:
+                account.name = data.name
+            if data.email is not None:
+                account.email = data.email
+
+            self.session.add(account)
+            self.session.commit()
+            self.session.refresh(account)
+            return account
+        except SQLAlchemyError:
+            self.session.rollback()
+            return None

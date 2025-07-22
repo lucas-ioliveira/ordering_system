@@ -5,7 +5,7 @@ from api.endpoints.auth.providers import get_current_user
 from api.endpoints.accounts.providers import get_account_service
 from api.endpoints.accounts.services import AccountService
 from api.endpoints.accounts.schemas import (ResponseAccountsSchema, ResponseAccountsPublicSchema, 
-                                            ResponseAccountsAdminSchema)
+                                            ResponseAccountsAdminSchema, UpdateAccountsSchema)
 from api.models.users import User
 
 router = APIRouter(
@@ -74,3 +74,11 @@ async def get_account(account_id: int, service: AccountService = Depends(get_acc
     
     account = service.get_account(user, account_id)
     return ResponseAccountsSchema(message='Account found', data=account)
+
+@router.post('/{account_id}/update', status_code=status.HTTP_200_OK, response_model=ResponseAccountsSchema[ResponseAccountsPublicSchema])
+async def update_account(account_id: int, update_account_schema: UpdateAccountsSchema, 
+                         service: AccountService = Depends(get_account_service),
+                         user: User = Depends(get_current_user)):
+    print(f'Dados da requisição: {update_account_schema.__dict__}')
+    account = service.update_account(user, account_id, update_account_schema)
+    return ResponseAccountsSchema(message='Update completed', data=account)
