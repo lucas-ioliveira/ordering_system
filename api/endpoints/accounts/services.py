@@ -1,9 +1,9 @@
 from fastapi import HTTPException
 
 from api.endpoints.accounts.repository import AccountRepository
+from api.endpoints.accounts.schemas import UpdateAccountsSchema
 from api.models.users import User
 from api.config.emuns import UserErrorMessages
-from api.endpoints.accounts.schemas import UpdateAccountsSchema
 
 
 class AccountService:
