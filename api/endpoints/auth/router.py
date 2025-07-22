@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from api.endpoints.auth.services import AuthService
@@ -12,7 +12,7 @@ from api.models.users import User
 
 router = APIRouter(prefix='/api/v1/auth', tags=['auth'])
 
-@router.post('/create-account', status_code=201, response_model=ResponseUserSchema[ResponseUser])
+@router.post('/create-account', status_code=status.HTTP_201_CREATED, response_model=ResponseUserSchema[ResponseUser])
 async def create_account(
     create_user_schema: CreateUserSchemas,
     service: AuthService = Depends(get_auth_service)
@@ -31,7 +31,7 @@ async def create_account(
     user = service.create_user(create_user_schema)
     return ResponseUserSchema(message='Usuário criado com sucesso.', data=ResponseUser.from_orm(user))
 
-@router.post('/create-account-admin', status_code=201, response_model=ResponseUserSchema[ResponseUser])
+@router.post('/create-account-admin', status_code=status.HTTP_201_CREATED, response_model=ResponseUserSchema[ResponseUser])
 async def create_account_admin(
     create_user_admin_schema: CreateUserAdminSchemas,
     service: AuthService = Depends(get_auth_service),
@@ -51,7 +51,7 @@ async def create_account_admin(
     user = service.create_user_admin(create_user_admin_schema, user)
     return ResponseUserSchema(message='Usuário criado com sucesso.', data=ResponseUser.from_orm(user))
 
-@router.get('/refresh-token')
+@router.get('/refresh-token', status_code=status.HTTP_200_OK)
 async def refresh_token(refresh_token: str = Depends(oauth2_scheme), 
                         service: AuthService = Depends(get_auth_service)):
     """
@@ -71,7 +71,7 @@ async def refresh_token(refresh_token: str = Depends(oauth2_scheme),
     refresh_token_service = service.refresh_token(refresh_token)
     return refresh_token_service
 
-@router.post('/login')
+@router.post('/login', status_code=status.HTTP_200_OK)
 async def login(login_user_schema: LoginUserSchemas, 
                 service: AuthService = Depends(get_auth_service)):
     
@@ -98,7 +98,7 @@ async def login(login_user_schema: LoginUserSchemas,
     login = service.login(login_user_schema)
     return login
 
-@router.post('/login-form')
+@router.post('/login-form', status_code=status.HTTP_200_OK)
 async def login_form(login_user_form: OAuth2PasswordRequestForm = Depends(), 
                 service: AuthService = Depends(get_auth_service)):
     """
