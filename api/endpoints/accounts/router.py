@@ -71,6 +71,26 @@ async def get_all_accounts_admin(offset: int = 0, limit: int = 10,
 @router.get('/{account_id}', status_code=status.HTTP_200_OK, response_model=ResponseAccountsSchema[ResponseAccountsPublicSchema])
 async def get_account(account_id: int, service: AccountService = Depends(get_account_service),
                       user: User = Depends(get_current_user)):
+    """
+    Recupera os dados de uma conta pelo seu ID, garantindo que o usuário tenha permissão para acessá-la.
+
+    Esta rota retorna os detalhes públicos da conta solicitada, desde que o usuário autenticado 
+    seja administrador ou dono da conta.
+
+    Args:
+        account_id (int): ID da conta a ser recuperada.
+        service (AccountService): Serviço injetado para lidar com a lógica de negócio da conta.
+        user (User): Usuário autenticado que faz a requisição.
+
+    Returns:
+        ResponseAccountsSchema[ResponseAccountsPublicSchema]: 
+            Objeto contendo uma mensagem de sucesso e os dados públicos da conta.
+
+    Raises:
+        HTTPException: 
+            - 403 se o usuário não tiver permissão para acessar a conta.
+            - 404 se a conta não for encontrada.
+    """
     
     account = service.get_account(user, account_id)
     return ResponseAccountsSchema(message='Account found', data=account)
@@ -79,6 +99,27 @@ async def get_account(account_id: int, service: AccountService = Depends(get_acc
 async def update_account(account_id: int, update_account_schema: UpdateAccountsSchema, 
                          service: AccountService = Depends(get_account_service),
                          user: User = Depends(get_current_user)):
-    print(f'Dados da requisição: {update_account_schema.__dict__}')
+    """
+    Atualiza os dados de uma conta específica identificada pelo `account_id`.
+
+    Recebe os dados para atualização via schema `UpdateAccountsSchema` e verifica se o usuário 
+    autenticado tem permissão para realizar a alteração (deve ser administrador ou dono da conta).
+    Retorna os dados atualizados da conta após a alteração.
+
+    Args:
+        account_id (int): ID da conta a ser atualizada.
+        update_account_schema (UpdateAccountsSchema): Dados opcionais para atualização da conta.
+        service (AccountService): Serviço responsável pela lógica de negócio da conta.
+        user (User): Usuário autenticado realizando a requisição.
+
+    Returns:
+        ResponseAccountsSchema[ResponseAccountsPublicSchema]: 
+            Objeto contendo mensagem de sucesso e os dados públicos da conta atualizada.
+
+    Raises:
+        HTTPException: 
+            - 403 se o usuário não estiver autorizado a atualizar a conta.
+            - 404 se a conta não for encontrada.
+    """
     account = service.update_account(user, account_id, update_account_schema)
     return ResponseAccountsSchema(message='Update completed', data=account)
