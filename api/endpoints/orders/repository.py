@@ -37,7 +37,7 @@ class OrderRepository:
         except SQLAlchemyError:
             return []
 
-    def get_order_by_id(self, id_order: int, user_id: int) -> Optional[Order]:
+    def get_order_by_id(self, id_order: int) -> Optional[Order]:
         """
             Recupera um pedido pelo seu ID do banco de dados.
 
