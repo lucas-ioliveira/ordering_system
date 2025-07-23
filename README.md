@@ -24,6 +24,12 @@ git clone https://github.com/lucas-ioliveira/ordering_system.git
 
 <h2 id="started">🚀 Primeiros passos</h2>
 
+<br>
+
+<p>Obs: Na raiz do projeto encontrará um arquivo chamado .env_exemple, renomeie para .env e adicione os valores que são necessários. </p>
+
+<br>
+
 <p>Basta entrar no diretório do projeto e no terminal rodar o comando:</p> 
 
 ```bash
