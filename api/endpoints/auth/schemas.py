@@ -22,7 +22,6 @@ class CreateUserSchemas(BaseModel):
     name: str
     email: str
     password: str
-    active: bool
 
     class Config:
         from_attibutes = True
@@ -31,7 +30,6 @@ class CreateUserAdminSchemas(BaseModel):
     name: str
     email: str
     password: str
-    active: bool
     admin: bool
 
     class Config:

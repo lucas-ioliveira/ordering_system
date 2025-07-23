@@ -67,8 +67,7 @@ class AuthService:
         user = User(
             name=data.name,
             email=data.email,
-            password=encrypted,
-            active=data.active
+            password=encrypted
         )
 
         created = self.repository.create_user(user)
